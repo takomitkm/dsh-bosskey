@@ -1,4 +1,4 @@
-﻿# bosskey-listener.ps1 —— dsh-bosskey 热键监听器(独立进程)。
+# bosskey-listener.ps1 —— dsh-bosskey 热键监听器(独立进程)。
 #
 # RegisterHotKey 注册全局热键 -> 触发时判断 DeepSeek Harness 主窗口状态:
 #   可见且前台 -> 按 hideWhenForeground 决定是否 SW_HIDE(外置隐藏,账面错位由唤醒半边兜)
@@ -17,6 +17,7 @@ param(
   [Parameter(Mandatory = $true)][int]$HkVk
 )
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Windows.Forms | Out-Null
 
 if (-not ('BkNative' -as [type])) {
   Add-Type -TypeDefinition @"
@@ -173,6 +174,27 @@ function Invoke-BossToggle {
     Invoke-Wake
     [void](Post-Trigger @{ action = 'wake'; detail = 'window was visible but not foreground' })
   }
+}
+
+function Invoke-StatusReport {
+  # 状态页:dsh://bosskey/status 由 client-shortcuts 设置页的「打开状态页」按钮触发。
+  # 协议 URL 的完整形式是 dsh://bosskey/status —— exe 收到后以参数传入本进程外,
+  # 这里轮询的是 active.json(HotkeyListener.persistActive 写)的快照。
+  $active = $null
+  try {
+    $dir = if ($env:DSH_HOME -and $env:DSH_HOME.Trim()) { Join-Path $env:DSH_HOME.Trim() 'bosskey' } else { Join-Path $env:USERPROFILE '.dsh\bosskey' }
+    $active = Get-Content (Join-Path $dir 'active.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  } catch { }
+  $hk = if ($active -and $active.hotkey) { $active.hotkey } else { '未知(读 active.json 失败)' }
+  $since = if ($active -and $active.since) { ([DateTimeOffset]::FromUnixTimeMilliseconds([int64]$active.since).LocalDateTime.ToString('yyyy-MM-dd HH:mm:ss')) } else { '未知' }
+  $hide = 'true(前台时隐藏)'
+  try {
+    $cfg = Get-FreshConfig
+    if ($cfg -and ($cfg.hideWhenForeground -eq $false)) { $hide = 'false(只唤起不隐藏)' }
+  } catch { }
+  $text = "dsh-bosskey 监听器状态`n`n  当前热键:  $hk`n  前台隐藏:  $hide`n  生效时间:  $since`n  进程 PID:  $PID`n`n完整 toggle:前台时按=隐藏,后台时按=唤回。"
+  $icon = [System.Windows.Forms.MessageBoxIcon]::Information
+  [void][System.Windows.Forms.MessageBox]::Show($text, 'dsh-bosskey', [System.Windows.Forms.MessageBoxButtons]::OK, $icon)
 }
 
 # ---------------- 主循环 ----------------
