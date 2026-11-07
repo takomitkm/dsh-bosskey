@@ -1,0 +1,35 @@
+{
+  "name": "dsh-bosskey",
+  "version": "0.1.0",
+  "description": "DSH 桌面端插件:全局 Boss 键(F9 默认,可配置),任意应用前台时一键隐藏/唤回 DeepSeek Harness 主窗口",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "desktop",
+    "bosskey",
+    "global-hotkey",
+    "windows"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

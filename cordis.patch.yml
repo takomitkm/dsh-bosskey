@@ -1,0 +1,6 @@
+# dsh-bosskey —— 挂载声明。
+# 向 profile 配置树插入一行 host 插件;插件自己拉起一个隐藏的 PowerShell 进程注册
+# Win32 全局热键(RegisterHotKey),触发时经壳的官方 dsh://open 通道唤回主窗口。
+- insert:
+    - id: dsh-bosskey
+      name: dsh-bosskey
